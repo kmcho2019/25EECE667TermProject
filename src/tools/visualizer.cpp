@@ -52,8 +52,9 @@ void drawCell(Image &image, Instance *cell) {
     upper_right_x = lower_left_x + 1;
   if (lower_left_y == upper_right_y)
     upper_right_y = lower_left_y + 1;
-
-  image.draw_rectangle(lower_left_x, lower_left_y, upper_right_x, upper_right_y, Color::BLACK);
+  if(cell->isFiller)
+    image.draw_rectangle(lower_left_x, lower_left_y, upper_right_x, upper_right_y, Color::BLUE);
+  else image.draw_rectangle(lower_left_x, lower_left_y, upper_right_x, upper_right_y, Color::BLACK);
 }
 void drawNet(Image &image, Placer::Net *net) {
   uint64 center_x = 0, center_y = 0;
@@ -62,8 +63,8 @@ void drawNet(Image &image, Placer::Net *net) {
     // if the connected cells are not placed
     if (!pin->getInstance())
       continue;
-    if (!pin->getInstance()->isPlaced())
-      assert(0);
+    // if (!pin->getInstance()->isPlaced())
+      //assert(0);
     center_x += pin->getCoordinate().first;
     center_y += pin->getCoordinate().second;
     valid_pin_number ++;
@@ -96,7 +97,7 @@ void drawPad(Image &image, Placer::Pin *pin) {
                        y + pad_half_height,
                        Color::BLUE);
 }
-void Circuit::saveImg(const string &file_name) {
+void Circuit::saveImg(const string &output_path_name, const string &file_name) {
   // image save time check
   clock_t start_time = clock();
 
@@ -127,7 +128,7 @@ void Circuit::saveImg(const string &file_name) {
   }
 
   // image save
-  string file_path = "../output/images/" + file_name + ".bmp";
+  string file_path = output_path_name + file_name + ".bmp";
   const char *file_path_char = file_path.c_str();
   image.save(file_path_char);
 
