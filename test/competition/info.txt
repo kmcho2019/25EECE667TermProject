@@ -3,7 +3,7 @@ Scale info
 Medium
 	test1, test2, test3(not hidden, Open!)
 Large
-	test4, test5(hidden)
+	test4, test12(hidden), test13(hidden)
 
 
 test1 (medium01)
@@ -46,12 +46,22 @@ Total Cell Area: 2.454668e+12
 Die Area: 2.855216e+12
 ===================================================
 
-test5 (large02)
+test12
 ================== bench analyze ==================
-Instance #: 290386
-Net #: 182000
-IO pad #: 1211
+Instance #: 539611
+Net #: 537579
+IO pad #: 3221
 
-Total Cell Area: 2.708448e+12
-Die Area: 2.855216e+12
+Total Cell Area: 6.119606e+12
+Die Area: 1.231946e+13
+===================================================
+
+test13
+================== bench analyze ==================
+Instance #: 899404
+Net #: 895255
+IO pad #: 3221
+
+Total Cell Area: 1.024902e+13
+Die Area: 1.725894e+13
 ===================================================
