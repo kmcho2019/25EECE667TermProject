@@ -60,6 +60,56 @@ void Circuit::placeExample() {
 
 }
 
+
+// Alternative version that tries to avoid outside die placement
+/*
+void Circuit::placeExample() {
+  // Random placement that respects die boundary (lower-left inside die, upper-right inside die)
+  std::mt19937_64 gen(std::random_device{}());
+
+  const long long DW = static_cast<long long>(die_->getWidth());
+  const long long DH = static_cast<long long>(die_->getHeight());
+
+  // Optional keep-out margins (halo) from the edges; set to 0 if not needed
+  const long long haloX = 0;
+  const long long haloY = 0;
+
+  // If you have placement grid info, set these (>0). Otherwise they’ll be 1 (no snapping).
+  const long long siteW = 1;  // e.g., from LEF site width
+  const long long rowH  = 1;  // e.g., std-cell row height
+
+  for (Instance* inst : instance_pointers_) {
+    // Skip fixed/pads if your Instance API supports it.
+    // if (inst->isFixed() || inst->isPad()) continue;
+
+    const long long W = static_cast<long long>(inst->getWidth());
+    const long long H = static_cast<long long>(inst->getHeight());
+
+    // Handle pathological cases where a macro is >= die size
+    const long long maxX = std::max<long long>(0, DW - W - haloX);
+    const long long maxY = std::max<long long>(0, DH - H - haloY);
+
+    std::uniform_int_distribution<long long> disX(0, maxX);
+    std::uniform_int_distribution<long long> disY(0, maxY);
+
+    long long x = disX(gen);
+    long long y = disY(gen);
+
+    // Optional: snap to placement grid if known
+    if (siteW > 1) x = (x / siteW) * siteW;
+    if (rowH  > 1) y = (y / rowH) * rowH;
+
+    // Final safety clamp (prevents fencepost/rounding accidents)
+    x = std::min<long long>(x, DW - W);
+    y = std::min<long long>(y, DH - H);
+
+    inst->setCoordinate(static_cast<int>(x), static_cast<int>(y));
+  }
+
+  std::cout << "RandomPlace Done.\n";
+}
+*/
+
 void Circuit::howToUse() {
   /*!
    * This function is
