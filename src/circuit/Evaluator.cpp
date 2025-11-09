@@ -135,35 +135,39 @@ bool Evaluator::placeCheck() {
   return all_placed;
 }
 bool Evaluator::isAllCellInDie() {
-  ulong die_width = die_->getWidth();
-  ulong die_height = die_->getHeight();
+  const long die_width  = static_cast<long>(die_->getWidth()); 
+  const long die_height = static_cast<long>(die_->getHeight()); 
   for (Instance *instance : instance_pointers_) {
-    pair<int, int> coordinate = instance->getCoordinate();
-    if (coordinate.first < 0 || coordinate.first > die_width)
-      return false;
-    else if (coordinate.second < 0 || coordinate.second > die_height)
-      return false;
+
+    const auto ll = instance->getCoordinate();  
+    const long urx = static_cast<long>(ll.first)  + static_cast<long>(instance->getWidth()); 
+    const long ury = static_cast<long>(ll.second) + static_cast<long>(instance->getHeight()); 
+    if (ll.first  < 0 || ll.second < 0 || urx > die_width || ury > die_height) 
+      return false; 
   }
   return true;
 }
 pair<int, int> Evaluator::getBinNumbers() {
   // get the average cell width and height
-  long averageWidth = 0, averageHeight = 0;
+  long long averageWidth = 0, averageHeight = 0;
   for (Instance *instance : instance_pointers_) {
     averageWidth += instance->getWidth();
     averageHeight += instance->getHeight();
   }
   if (averageWidth < 0)
     assert(0);
-  averageWidth /= static_cast<int>(instance_pointers_.size());
-  averageHeight /= static_cast<int>(instance_pointers_.size());
 
-  int number_of_grid_X = floor(static_cast<float>(die_->getWidth() / averageWidth) * 0.2);
-  int number_of_grid_Y = floor(static_cast<float>(die_->getHeight() / averageHeight) * 0.2);
+  const double avgW = std::max(1.0, static_cast<double>(averageWidth)  / instance_pointers_.size()); 
+  const double avgH = std::max(1.0, static_cast<double>(averageHeight) / instance_pointers_.size()); 
+  int number_of_grid_X = static_cast<int>(std::floor((static_cast<double>(die_->getWidth())  / avgW) * 0.2)); 
+  int number_of_grid_Y = static_cast<int>(std::floor((static_cast<double>(die_->getHeight()) / avgH) * 0.2));
+
   if (number_of_grid_X > 40)
     number_of_grid_X = 40;
   if (number_of_grid_Y > 40)
     number_of_grid_Y = 40;
+  if (number_of_grid_X < 1) number_of_grid_X = 1; 
+  if (number_of_grid_Y < 1) number_of_grid_Y = 1;
 
   return pair<int, int>{number_of_grid_X, number_of_grid_Y};
 }
@@ -171,10 +175,14 @@ bool Evaluator::densityCheck() {
   // get the average cell width and height
   pair<int, int> number_of_grid;
   number_of_grid = getBinNumbers();
-  uint die_width = die_->getWidth();
-  uint die_height = die_->getHeight();
-  uint64 bin_width = static_cast<int>(die_width / number_of_grid.first);
-  uint64 bin_height = static_cast<int>(die_height / number_of_grid.second);
+
+  const int nx = std::max(1, number_of_grid.first); 
+  const int ny = std::max(1, number_of_grid.second); 
+  const uint die_width = die_->getWidth(); 
+  const uint die_height = die_->getHeight(); 
+  // ceil division so bin size is never 0 
+  const uint64 bin_width  = std::max<uint64>(1, (static_cast<uint64>(die_width)  + nx - 1) / nx); 
+  const uint64 bin_height = std::max<uint64>(1, (static_cast<uint64>(die_height) + ny - 1) / ny);
 
   // grid setting
   class Bin {
@@ -205,16 +213,20 @@ bool Evaluator::densityCheck() {
       if(!instance->isFiller) cell_area_ += (rectUx - rectLx) * (rectUy - rectLy);
     }
   };
-  vector<vector<Bin>> bins2D;
-  for (int i = 0; i <= number_of_grid.first; ++i) {
-    vector<Bin> bins1D;
-    for (int j = 0; j <= number_of_grid.second; ++j) {
-      pair<int, int> lower_left{i * bin_width, j * bin_height};
-      pair<int, int> upper_right{(i + 1) * bin_width, (j + 1) * bin_height};
-      bins1D.emplace_back(lower_left, upper_right);
-    }
-    bins2D.push_back(bins1D);
+
+  // Build exactly nx × ny bins; treat as half-open boxes [ll, ur) 
+  vector<vector<Bin>> bins2D(nx, vector<Bin>(ny)); 
+  for (int i = 0; i < nx; ++i) { 
+    for (int j = 0; j < ny; ++j) { 
+      pair<int, int> lower_left { i * static_cast<int>(bin_width), 
+                                  j * static_cast<int>(bin_height) }; 
+      pair<int, int> upper_right{ (i + 1) * static_cast<int>(bin_width), 
+                                  (j + 1) * static_cast<int>(bin_height) }; 
+      bins2D[i][j] = Bin(lower_left, upper_right); 
+    } 
   }
+
+
   // get utility in each bins
   for (Instance *instance : instance_pointers_) {
     pair<int, int> instance_lower_left = instance->getCoordinate();
@@ -223,13 +235,20 @@ bool Evaluator::densityCheck() {
         instance_lower_left.second + instance->getHeight()
     };
 
-    int left_idx = static_cast<int>(instance_lower_left.first / bin_width);
-    int right_idx = static_cast<int>(instance_upper_right.first / bin_width);
-    int lower_idx = static_cast<int>(instance_lower_left.second / bin_height);
-    int upper_idx = static_cast<int>(instance_upper_right.second / bin_height);
+    // half-open indexing; subtract 1 so points on the edge map inside 
+    int left_idx  = static_cast<int>( instance_lower_left.first             / bin_width); 
+    int right_idx = static_cast<int>((instance_upper_right.first  - 1)     / bin_width); 
+    int lower_idx = static_cast<int>( instance_lower_left.second            / bin_height); 
+    int upper_idx = static_cast<int>((instance_upper_right.second - 1)     / bin_height); 
+    // clamp to valid range 
+    left_idx  = std::clamp(left_idx,  0, nx - 1); 
+    right_idx = std::clamp(right_idx, 0, nx - 1); 
+    lower_idx = std::clamp(lower_idx, 0, ny - 1); 
+    upper_idx = std::clamp(upper_idx, 0, ny - 1);
+
     for (int j = left_idx; j <= right_idx; ++j) {
       for (int k = lower_idx; k <= upper_idx; ++k) {
-        bins2D.at(j).at(k).getOverlapArea(instance);
+        bins2D[j][k].getOverlapArea(instance);
       }
     }
   }
@@ -239,10 +258,10 @@ bool Evaluator::densityCheck() {
   // time complexity: O(mxm), m is bin numbers
   uint64 max_cell_area_in_bin = 0;
   Bin max_density_bin;
-  for (int i = 0; i < number_of_grid.second; ++i) {
-    for (int j = 0; j < number_of_grid.first; ++j) {
-      if (max_cell_area_in_bin < bins2D.at(j).at(i).cell_area_) {
-        max_density_bin = bins2D.at(j).at(i);
+  for (int i = 0; i < ny; ++i) {
+    for (int j = 0; j < nx; ++j) {
+      if (max_cell_area_in_bin < bins2D[j][i].cell_area_) {
+        max_density_bin = bins2D[j][i];
         max_cell_area_in_bin = max_density_bin.cell_area_;
       }
     }
