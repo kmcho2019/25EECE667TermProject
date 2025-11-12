@@ -254,9 +254,9 @@ make
 
 ### 2. Your Own Placement (70pt)
 
-**Due: 2025/12/08**
+**Due: 2025/11/29 and 2025/12/08**
 
-The grading considers `HPWL` and `cell density` (routability) and `wall_runtime`. 
+The grading considers `HPWL` and `cell density` (routability).
 
 ### Cell Density (Routability) 
 The evaluator makes a 40x40 grid and computes density as:
@@ -267,46 +267,37 @@ The evaluator makes a 40x40 grid and computes density as:
 If the **max** density over all grids exceeds 1.0, a penalty is applied; otherwise, density check is passed.
 
 ### Scoring
-The final score is a product of a `PlacementScore` (based on HPWL and density) and a `RuntimeFactor`.
-```
-FinalScore = PlacementScore x RuntimeFactor
-```
-### 2.1 PlacementScore
-This score component evaluates the quality of your placement, based on HPWL and the density penalty.
+
+The score component evaluates the quality of your placement, based on HPWL and the density penalty.
 
 The score follows:
 
 $$
 \text{PlacementScore} =
 \begin{cases}
-\alpha \times \dfrac{1}{1 + \log\left(\dfrac{\mathrm{HPWL}}{\mathrm{HPWL}_{1th}}\right)}, & \text{if maxDensity} \le 1 \\
-\alpha \times \dfrac{1}{1 + \log\left(\dfrac{\mathrm{HPWL}}{\mathrm{HPWL}_{1th}}\right)} \times e^{-(\text{maxDensity}-1)}, & \text{otherwise}
+\alpha \times \dfrac{1}{1 + \log\left(\dfrac{\mathrm{HPWL}}{\mathrm{HPWL}_{ref}}\right)}, & \text{if maxDensity} \le 1 \\
+\alpha \times \dfrac{1}{1 + \log\left(\dfrac{\mathrm{HPWL}}{\mathrm{HPWL}_{ref}}\right)} \times e^{-(\text{maxDensity}-1)}, & \text{otherwise}
 \end{cases} \tag{3}
 $$
 
-Here, $\mathrm{HPWL}_{1th}$ is the smallest HPWL among students who pass the max density check. $\alpha$ depends on the benchmark:
+#### 2.1 Part 1: Small Benchmarks
 
-| Benchmark     | alpha |
-| ---           | ---:  |
-| medium01.def  | 05    |
-| medium02.def  | 05    |
-| medium03.def  | 05    |
-| large01.def   | 15    |
-| test12.def    | 20    |
-| test13.def    | 20    |
+**Due: 2025/11/29**
 
-Total sum of alphas is 70 points.
+Your task will be to create your own placer that will be evaluated on relatively small designs (`small01.def`, `small02.def`, and `small03.def`).
 
-### 2.2 RuntimeFactor
+Runtime Limit: Your placer must be able to finish all placing all of the designs within 30 minutes. Designs that does not finish within this timeframe will receive 0 credit.
 
-This factor applies a bonus for runtimes faster than the median and a penalty for runtimes slower than the median.
 
-```math
-RuntimeFactor = e^{-\beta \times \left( \frac{\text{wall\_runtime} - \text{submission\_median\_runtime}}{\text{submission\_median\_runtime}} \right)}
-```
-* `wall_runtime` is your submission's runtime on that benchmark.
-* `submission_median_runtime` is the median runtime for the entire class on that benchmark.
-* $\beta$ is a scaling constant (e.g., $\beta = 0.2$) that controls the sensitivity to runtime.
+#### 2.2 Part 2: Large Benchmarks
+
+**Due: 2025/12/08**
+
+Then your next step will be to create a placer that will scale to larger designs (`large01.def`, `large02.def`, and `large03.def`).
+
+Runtime Limit: Your placer must be able to finish all placing all of the designs within 60 minutes. Designs that does not finish within this timeframe will receive 0 credit.
+
+#### How to Build and Evaluate
 
 Build and evaluate (version 1 shows HPWL and max density):
 
@@ -339,25 +330,40 @@ make
 
 ### Benchmarks
 
-Scoring benchmarks: `medium01.def`, `medium02.def`, `medium03.def`, `large01.def`, `test12.def`, and `test13.def`.
+| Part | Benchmark       | alpha | Remark | 
+| --- | ---              | ---:  | ---:   |
+| Part 1 | test.def      | 00    | Not evaluated  | 
+| Part 1 | small01.def   | 05    | Open  | 
+| Part 1 | small02.def   | 05    | Open  | 
+| Part 1 | small03.def   | 05    | Hidden  | 
+| Part 2 | large01.def   | 15    | Open  | 
+| Part 2 | large02.def   | 20    | Open  | 
+| Part 2 | large03.def   | 20    | Hidden  | 
 
-- `medium01.def`, `medium02.def`, `medium03.def`, `large01.def` will be given.
-- The other two (`test12.def` and `test13.def`) will be hidden.
+Total sum of alphas is 70 points.
 
-Simple benchmarks for debugging (not for scoring): `simple01.def`, `simple02.def`, `simple03.def`, `simple04.def`.
+Scoring benchmarks: `small01.def`, `small02.def`, `small03.def`, `large01.def`, `large02.def`, and `large03.def`.
+
+- `small01.def`, `small02.def`, `large01.def`, `large02.def` will be given.
+- The other two (`small03.def` and `large03.def`) will be hidden.
+
+Simple benchmarks for debugging (not for scoring): `test.def`, `simple01.def`, `simple02.def`, `simple03.def`, `simple04.def`.
 
 **Total runtime limit**: 30 minutes to place all benchmarks.
 
+
+
 #### Benchmark Designs
 
-| Scale  | Test   | Alias    | Instance Num. | Net Num. | IO Pad Num. | Total Cell Area |     Die Area | Misc.     |
-| ------ | ------ | -------- | -----: | -----: | ------: | --------------: | -----------: | ------ |
-| Medium | test1  | medium01 |  17782 |  19322 |     693 |    1.182125e+11 | 8.103060e+11 | Open   |
-| Medium | test2  | medium02 |  37004 |  39220 |     231 |    2.279460e+11 | 1.439712e+12 | Open   |
-| Medium | test3  | medium03 |  35913 |  36834 |    1211 |    7.115707e+11 | 1.494705e+12 | Open   |
-| Large  | test4  | large01  | 192911 | 178858 |    1211 |    2.454668e+12 | 2.855216e+12 | Open   |
-| Large  | test12 | -        | 539611 | 537579 |    3221 |    6.119606e+12 | 1.231946e+13 | Hidden |
-| Large  | test13 | -        | 899404 | 895255 |    3221 |    1.024902e+13 | 1.725894e+13 | Hidden |
+| Name | #inst | #net | #pad | Macro | Remark |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| Test | 122 | 311 | 0 | 0 | No eval |
+| Small1 | 3984 | 4122 | 267 | 0 | Open |
+| Small2 | 3716 | 3751 | 46 | 0 | Open |
+| Small3 | 7342 | 7598 | 369 | 0 | Hidden |
+| Large1 | 8283 | 8953 | 57 | 4 (Fixed) | Open |
+| Large2 | 72094 | 72410 | 1211 | 4 (Fixed) | Open |
+| Large3 | 35973 | 56700 | 1211 | 4 (Fixed) | Hidden |
 
 
 ---
