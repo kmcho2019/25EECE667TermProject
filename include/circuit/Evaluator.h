@@ -53,7 +53,7 @@ class Evaluator : public Circuit {
   bool placeCheck();
   pair<int, int> getBinNumbers();
   bool densityCheck();
-
+  bool fixedPlacedInstanceCheck(Evaluator* compared_circuit);
  public:
   // for evaluation
   bool placeLegalityCheck(Evaluator *compared_circuit);

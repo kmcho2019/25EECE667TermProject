@@ -36,79 +36,204 @@
 
 namespace Placer {
 
-void Circuit::placeExample() {
-  /*!
-   * This below code is example code for simple placement (random placement).
-   * You should implement your placer referring below code in `src/algorithm/place.cpp`.
-   * */
+// void Circuit::placeExample() {
+//   /*!
+//    * This below code is example code for simple placement (random placement).
+//    * You should implement your placer referring below code in `src/algorithm/place.cpp`.
+//    * */
 
-  // Random place
-  // This is simple place example
+//   // Random place
+//   // This is simple place example
 
-  //    mt19937 genX(1111);  // fix seed
-  //    mt19937 genY(2222);  // fix seed
-  mt19937 genX(random_device{}());
-  mt19937 genY(random_device{}());
-  uniform_int_distribution<int> disX(0, (int) die_->getWidth());
-  uniform_int_distribution<int> disY(0, (int) die_->getHeight());
+//   //    mt19937 genX(1111);  // fix seed
+//   //    mt19937 genY(2222);  // fix seed
+//   mt19937 genX(random_device{}());
+//   mt19937 genY(random_device{}());
+//   uniform_int_distribution<int> disX(0, (int) die_->getWidth());
+//   uniform_int_distribution<int> disY(0, (int) die_->getHeight());
 
-  for (Instance *instance : instance_pointers_) {
-    instance->setCoordinate(disX(genX), disY(genY));
-  }
+//   for (Instance *instance : instance_pointers_) {
+//     instance->setCoordinate(disX(genX), disY(genY));
+//   }
 
-  cout << "RandomPlace Done." << endl;
+//   cout << "RandomPlace Done." << endl;
 
-}
+// }
 
 
 // Alternative version that tries to avoid outside die placement
-/*
+// Accounts for not moving initial fixed macros
+// void Circuit::placeExample() {
+//   // Random placement that respects die boundary (lower-left inside die, upper-right inside die)
+//   //std::mt19937_64 gen(std::random_device{}());
+
+//   std::mt19937_64 gen(42);
+
+//   const long long DW = static_cast<long long>(die_->getWidth());
+//   const long long DH = static_cast<long long>(die_->getHeight());
+
+//   // Optional keep-out margins (halo) from the edges; set to 0 if not needed
+//   const long long haloX = 0;
+//   const long long haloY = 0;
+
+//   // If you have placement grid info, set these (>0). Otherwise they’ll be 1 (no snapping).
+//   const long long siteW = 1;  // e.g., from LEF site width
+//   const long long rowH  = 1;  // e.g., std-cell row height
+
+//   for (Instance* inst : instance_pointers_) {
+//     // Skip fixed/pads
+//     // ===== NEW: respect fixed / pre-placed instances =====
+//     // Anything that was already placed in the input DEF (macros, IOs, etc.)
+//     // should NOT be moved. Evaluator::fixedPlacedInstanceCheck() will verify this.
+//     if (inst->isPlaced()) {
+//       continue;
+//     }
+
+//     const long long W = static_cast<long long>(inst->getWidth());
+//     const long long H = static_cast<long long>(inst->getHeight());
+
+//     // Handle pathological cases where a macro is >= die size
+//     const long long maxX = std::max<long long>(0, DW - W - haloX);
+//     const long long maxY = std::max<long long>(0, DH - H - haloY);
+
+//     std::uniform_int_distribution<long long> disX(0, maxX);
+//     std::uniform_int_distribution<long long> disY(0, maxY);
+
+//     long long x = disX(gen);
+//     long long y = disY(gen);
+
+//     // Optional: snap to placement grid if known
+//     if (siteW > 1) x = (x / siteW) * siteW;
+//     if (rowH  > 1) y = (y / rowH) * rowH;
+
+//     // Final safety clamp (prevents fencepost/rounding accidents)
+//     x = std::min<long long>(x, DW - W);
+//     y = std::min<long long>(y, DH - H);
+
+//     inst->setCoordinate(static_cast<int>(x), static_cast<int>(y));
+//   }
+
+//   std::cout << "RandomPlace Done.\n";
+// }
+
+// Accounts for macro overlap as well
 void Circuit::placeExample() {
-  // Random placement that respects die boundary (lower-left inside die, upper-right inside die)
-  std::mt19937_64 gen(std::random_device{}());
+  //std::mt19937_64 gen(std::random_device{}());
+  std::mt19937_64 gen(42);
 
   const long long DW = static_cast<long long>(die_->getWidth());
   const long long DH = static_cast<long long>(die_->getHeight());
 
-  // Optional keep-out margins (halo) from the edges; set to 0 if not needed
+  // Optional keep-out margins from edges and around macros
   const long long haloX = 0;
   const long long haloY = 0;
 
-  // If you have placement grid info, set these (>0). Otherwise they’ll be 1 (no snapping).
-  const long long siteW = 1;  // e.g., from LEF site width
-  const long long rowH  = 1;  // e.g., std-cell row height
+  const long long siteW = 1;
+  const long long rowH  = 1;
+
+  // -------------------------------
+  // 1) Collect fixed macro obstacles
+  // -------------------------------
+  struct Rect {
+    long long lx, ly, ux, uy;  // [lx, ux) × [ly, uy)
+  };
+
+  std::vector<Rect> fixed_macros;
+  fixed_macros.reserve(instance_pointers_.size());
 
   for (Instance* inst : instance_pointers_) {
-    // Skip fixed/pads if your Instance API supports it.
-    // if (inst->isFixed() || inst->isPad()) continue;
+    // Anything that was placed in the input DEF is treated as fixed.
+    // If you added Instance::isMacro(), you can also require inst->isMacro().
+    if (!inst->isPlaced())
+      continue;
+
+    auto ll = inst->getCoordinate();
+    const long long W = static_cast<long long>(inst->getWidth());
+    const long long H = static_cast<long long>(inst->getHeight());
+
+    long long lx = ll.first  - haloX;
+    long long ly = ll.second - haloY;
+    long long ux = ll.first  + W + haloX;
+    long long uy = ll.second + H + haloY;
+
+    // clamp to die
+    lx = std::max<long long>(0, lx);
+    ly = std::max<long long>(0, ly);
+    ux = std::min<long long>(DW, lx + (ux - lx));
+    uy = std::min<long long>(DH, ly + (uy - ly));
+
+    fixed_macros.push_back(Rect{lx, ly, ux, uy});
+  }
+
+  // Overlap checker: candidate box vs all fixed macros
+  auto overlapsFixedMacro = [&fixed_macros](long long x, long long y,
+                                            long long w, long long h) {
+    long long ux = x + w;
+    long long uy = y + h;
+
+    for (const Rect& r : fixed_macros) {
+      // Non-overlap conditions for half-open boxes:
+      // (ux <= r.lx) OR (r.ux <= x) OR (uy <= r.ly) OR (r.uy <= y)
+      if (ux <= r.lx || r.ux <= x || uy <= r.ly || r.uy <= y)
+        continue; // no overlap
+
+      // Otherwise, they overlap
+      return true;
+    }
+    return false;
+  };
+
+  // ---------------------------------------------
+  // 2) Randomly place UNPLACED instances only,
+  //    avoiding overlap with fixed macros
+  // ---------------------------------------------
+  for (Instance* inst : instance_pointers_) {
+    // Do not move anything that was already placed in the input DEF
+    if (inst->isPlaced())
+      continue;
 
     const long long W = static_cast<long long>(inst->getWidth());
     const long long H = static_cast<long long>(inst->getHeight());
 
-    // Handle pathological cases where a macro is >= die size
     const long long maxX = std::max<long long>(0, DW - W - haloX);
     const long long maxY = std::max<long long>(0, DH - H - haloY);
 
     std::uniform_int_distribution<long long> disX(0, maxX);
     std::uniform_int_distribution<long long> disY(0, maxY);
 
-    long long x = disX(gen);
-    long long y = disY(gen);
+    long long x = 0;
+    long long y = 0;
 
-    // Optional: snap to placement grid if known
-    if (siteW > 1) x = (x / siteW) * siteW;
-    if (rowH  > 1) y = (y / rowH) * rowH;
+    const int max_trials = 1000;
+    int trials = 0;
 
-    // Final safety clamp (prevents fencepost/rounding accidents)
-    x = std::min<long long>(x, DW - W);
-    y = std::min<long long>(y, DH - H);
+    // Re-sample until we find a non-overlapping position or hit max_trials
+    do {
+      x = disX(gen);
+      y = disY(gen);
+
+      // snap to grid
+      if (siteW > 1) x = (x / siteW) * siteW;
+      if (rowH  > 1) y = (y / rowH) * rowH;
+
+      x = std::min<long long>(x, DW - W);
+      y = std::min<long long>(y, DH - H);
+      
+      ++trials;
+    } while (overlapsFixedMacro(x, y, W, H) && trials < max_trials);
+
+    if (trials == max_trials) {
+      std::cerr << "[Warning] Could not find non-overlapping location for "
+                << inst->getName() << " after " << max_trials
+                << " trials. Placing anyway (may overlap macros).\n";
+    }
 
     inst->setCoordinate(static_cast<int>(x), static_cast<int>(y));
   }
 
   std::cout << "RandomPlace Done.\n";
 }
-*/
+
 
 void Circuit::howToUse() {
   /*!

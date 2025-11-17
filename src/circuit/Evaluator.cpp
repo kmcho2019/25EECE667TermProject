@@ -67,11 +67,20 @@ bool Evaluator::evaluate(Evaluator *compared_circuit) {
   if (!placeLegalityCheck(compared_circuit))
     return false;
 
+  // Check if fixed Macros have been moved or not
+  if (!fixedPlacedInstanceCheck(compared_circuit)) {
+    std::cout << "Some fixed/placed instances are modified from the input DEF."
+              << std::endl;
+    return false;
+  }
+
   // Density check
   if (!densityCheck()) {
     cout << "This circuit doesn't pass density threshold." << endl;
     return false;
   }
+
+
 
   return true;
 }
@@ -284,6 +293,58 @@ bool Evaluator::densityCheck() {
   } else {
     return true;
   }
+}
+
+bool Evaluator::fixedPlacedInstanceCheck(Evaluator* compared_circuit) {
+
+  std::unordered_map<std::string, Instance*> name_to_instance;
+  name_to_instance.reserve(instance_pointers_.size());
+
+  for (Instance* inst : instance_pointers_) {
+
+    const std::string& name = inst->getName();
+    name_to_instance[name] = inst;
+  }
+
+
+  for (Instance* orig : compared_circuit->instance_pointers_) {
+    const std::string& name = orig->getName();
+
+    bool was_placed = orig->isPlaced(); 
+
+    if (!was_placed)
+      continue; 
+
+    auto it = name_to_instance.find(name);
+    if (it == name_to_instance.end()) {
+      std::cout << "Legality Error: instance \"" << name
+                << "\" not found in result circuit." << std::endl;
+      return false;
+    }
+
+    Instance* cur = it->second;
+    auto orig_coord = orig->getCoordinate();
+    auto cur_coord  = cur->getCoordinate();
+
+
+
+    if (orig_coord != cur_coord) {
+      std::cout << "Legality Error: instance \"" << name
+                << "\" was "
+                << " in the input DEF but its location changed."
+                << std::endl;
+
+      std::cout << "  original: (" << orig_coord.first << ", "
+                << orig_coord.second << ")"
+                << std::endl;
+
+      std::cout << "  result  : (" << cur_coord.first << ", "
+                << cur_coord.second << ")"
+                << std::endl;
+      return false;
+    }
+  }
+  return true;
 }
 
 }
