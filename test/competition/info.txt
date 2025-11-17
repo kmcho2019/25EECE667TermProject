@@ -1,67 +1,77 @@
 Scale info
 
-Medium
-	test1, test2, test3(not hidden, Open!)
-Large
-	test4, test12(hidden), test13(hidden)
+Part1(Small)
+	test1(not evaluated), test2, test3, test4(hidden)
+Part2(Large)
+	test5, test6, test7(hidden)
 
 
-test1 (medium01)
+test1 (25EECE667test)
 ================== bench analyze ==================
-Instance #: 17782
-Net #: 19322
-IO pad #: 693
+Instance #: 122
+Net #: 311
+IO pad #: 0
 
-Total Cell Area: 1.182125e+11
-Die Area: 8.103060e+11
+Total Cell Area: 1.455552e+09
+Die Area: 8.069089e+11
 ===================================================
 
-test2 (medium02)
+test2 (25EECE667small1)
 ================== bench analyze ==================
-Instance #: 37004
-Net #: 39220
-IO pad #: 231
+Instance #: 3984
+Net #: 4124
+IO pad #: 267
 
-Total Cell Area: 2.279460e+11
-Die Area: 1.439712e+12
+Total Cell Area: 1.354120e+10
+Die Area: 2.084963e+10
 ===================================================
 
-test3 (medium03)
+test3 (25EECE667small2)
 ================== bench analyze ==================
-Instance #: 35913
-Net #: 36834
+Instance #: 3716
+Net #: 3751
+IO pad #: 46
+
+Total Cell Area: 8.980176e+09
+Die Area: 1.381974e+10
+===================================================
+
+test4 (25EECE667small3)
+================== bench analyze ==================
+Instance #: 7342
+Net #: 7598
+IO pad #: 369
+
+Total Cell Area: 3.384648e+10
+Die Area: 5.211809e+10
+===================================================
+
+test5 (25EECE667large1)
+================== bench analyze ==================
+Instance #: 8283
+Net #: 8955
+IO pad #: 57
+
+Total Cell Area: 9.749976e+10
+Die Area: 1.523340e+11
+===================================================
+
+test6 (25EECE667large2)
+================== bench analyze ==================
+Instance #: 72094
+Net #: 72412
 IO pad #: 1211
 
-Total Cell Area: 7.115707e+11
-Die Area: 1.494705e+12
+Total Cell Area: 8.245483e+11
+Die Area: 2.057015e+12
 ===================================================
 
-test4 (large01)
+test7 (25EECE667large3)
 ================== bench analyze ==================
-Instance #: 192911
-Net #: 178858
+Instance #: 35977
+Net #: 36700
 IO pad #: 1211
 
-Total Cell Area: 2.454668e+12
-Die Area: 2.855216e+12
-===================================================
-
-test12
-================== bench analyze ==================
-Instance #: 539611
-Net #: 537579
-IO pad #: 3221
-
-Total Cell Area: 6.119606e+12
-Die Area: 1.231946e+13
-===================================================
-
-test13
-================== bench analyze ==================
-Instance #: 899404
-Net #: 895255
-IO pad #: 3221
-
-Total Cell Area: 1.024902e+13
-Die Area: 1.725894e+13
+Total Cell Area: 7.169311e+11
+Die Area: 2.787849e+12
 ===================================================

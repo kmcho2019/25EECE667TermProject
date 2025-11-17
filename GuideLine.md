@@ -357,13 +357,13 @@ Simple benchmarks for debugging (not for scoring): `test.def`, `simple01.def`, `
 
 | Name | #inst | #net | #pad | Macro | Remark |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| Test | 122 | 311 | 0 | 0 | No eval |
-| Small1 | 3984 | 4122 | 267 | 0 | Open |
-| Small2 | 3716 | 3751 | 46 | 0 | Open |
-| Small3 | 7342 | 7598 | 369 | 0 | Hidden |
-| Large1 | 8283 | 8953 | 57 | 4 (Fixed) | Open |
-| Large2 | 72094 | 72410 | 1211 | 4 (Fixed) | Open |
-| Large3 | 35973 | 56700 | 1211 | 4 (Fixed) | Hidden |
+| 25EECE667test | 122 | 311 | 0 | 0 | No eval |
+| 25EECE667small1 | 3984 | 4122 | 267 | 0 | Open |
+| 25EECE667small2 | 3716 | 3751 | 46 | 0 | Open |
+| 25EECE667small3 | 7342 | 7598 | 369 | 0 | Hidden |
+| 25EECE667large1 | 8283 | 8953 | 57 | 4 (Fixed) | Open |
+| 25EECE667large2 | 72094 | 72410 | 1211 | 4 (Fixed) | Open |
+| 25EECE667large3 | 35973 | 56700 | 1211 | 4 (Fixed) | Hidden |
 
 
 ---
