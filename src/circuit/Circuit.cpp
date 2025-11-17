@@ -205,6 +205,12 @@ void Circuit::init() {
    * 2. Then it makes pointer set for \c Circuit class, \n
    * 3. And also makes mapping from \c db_instance to instance pointer. \n\n
    * */
+  // Initialize total_cell_area
+  for (auto *db_inst: db_instances) {
+    Instance instance(db_inst);
+    total_cell_area += (float)instance.getArea();
+  }
+
   data_storage_.instances.reserve(db_instances.size());  // real data for instance
   instance_pointers_.reserve(db_instances.size());  // pointer data for instances
   // 1. make real data for instances
