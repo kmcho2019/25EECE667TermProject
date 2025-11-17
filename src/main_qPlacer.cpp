@@ -69,9 +69,10 @@ int main(int argc, char **argv) {
 
   // save image
   string img_file_name = "result_" + defName;
-  circuit.saveImg(output_path_name, img_file_name);
+
 
   circuit.quadraticPlacement();
+  circuit.saveImg(output_path_name, img_file_name);
   circuit.write(output_path_name + defName);
 
   cout << "Def is written successfully." << endl;
