@@ -219,7 +219,11 @@ bool Evaluator::densityCheck() {
       if (overlapWidth < 0 || overlapHeight < 0) {
         return;
       }
-      if(!instance->isFiller) cell_area_ += (rectUx - rectLx) * (rectUy - rectLy);
+      if(!instance->isFiller) {
+        uint64_t w = static_cast<uint64_t>(rectUx - rectLx);
+        uint64_t h = static_cast<uint64_t>(rectUy - rectLy);
+        cell_area_ += w * h;
+      }
     }
   };
 
