@@ -48,12 +48,12 @@ Die Area: 5.211809e+10
 
 test5 (25EECE667large1)
 ================== bench analyze ==================
-Instance #: 8283
-Net #: 8955
-IO pad #: 57
+Instance #: 8879
+Net #: 3155
+IO pad #: 0
 
-Total Cell Area: 9.749976e+10
-Die Area: 1.523340e+11
+Total Cell Area: 7.011359e+10
+Die Area: 8.666560e+10
 ===================================================
 
 test6 (25EECE667large2)
