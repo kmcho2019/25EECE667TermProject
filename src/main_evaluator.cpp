@@ -110,6 +110,23 @@ int main(int argc, char **argv) {
   cout << scientific << endl;
   cout << "HPWL: " << static_cast<double>(result_circuit.getHPWL()) << endl;
 
+  // Save Image Logic
+  // ---------------------------------------------------------
+  // 1. Strip the extension (e.g., .def) from defName to make a clean image name
+  string img_name_base = defName;
+  size_t lastindex = img_name_base.find_last_of(".");
+  if (lastindex != string::npos) {
+      img_name_base = img_name_base.substr(0, lastindex); 
+  }
+
+  // 2. Create a filename with a prefix to distinguish it from the placer output
+  string img_file_name = "eval_result_" + img_name_base;
+
+  // 3. Save the image using the same method as main_placer
+  cout << "Saving evaluation image to: " << output_path_name << img_file_name << endl;
+  result_circuit.saveImg(output_path_name, img_file_name);
+  // ---------------------------------------------------------
+
   // evaluation execute
   if (!general_place_evaluate) {
     // for quadratic evaluation
