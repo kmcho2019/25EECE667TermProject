@@ -168,13 +168,13 @@ pair<int, int> Evaluator::getBinNumbers() {
 
   const double avgW = std::max(1.0, static_cast<double>(averageWidth)  / instance_pointers_.size()); 
   const double avgH = std::max(1.0, static_cast<double>(averageHeight) / instance_pointers_.size()); 
-  int number_of_grid_X = static_cast<int>(std::floor((static_cast<double>(die_->getWidth())  / avgW) * 0.2)); 
-  int number_of_grid_Y = static_cast<int>(std::floor((static_cast<double>(die_->getHeight()) / avgH) * 0.2));
+  int number_of_grid_X = static_cast<int>(std::floor((static_cast<double>(die_->getWidth())  / avgW) * 0.25)); 
+  int number_of_grid_Y = static_cast<int>(std::floor((static_cast<double>(die_->getHeight()) / avgH) * 0.25));
 
-  if (number_of_grid_X > 40)
-    number_of_grid_X = 40;
-  if (number_of_grid_Y > 40)
-    number_of_grid_Y = 40;
+  if (number_of_grid_X > 50)
+    number_of_grid_X = 50;
+  if (number_of_grid_Y > 50)
+    number_of_grid_Y = 50;
   if (number_of_grid_X < 1) number_of_grid_X = 1; 
   if (number_of_grid_Y < 1) number_of_grid_Y = 1;
 
@@ -266,7 +266,26 @@ bool Evaluator::densityCheck() {
     }
   }
 
+  const double bin_area =
+      static_cast<double>(bin_width) * static_cast<double>(bin_height);
 
+  double total_overflow_density = 0.0;
+
+  for (int j = 0; j < nx; ++j) {
+    for (int i = 0; i < ny; ++i) {
+      const uint64_t cell_area = bins2D[j][i].cell_area_;
+      if (cell_area == 0) {
+        continue;
+      }
+
+      const double density = static_cast<double>(cell_area) / bin_area;
+
+      if (density > 1.0) {
+        total_overflow_density += (density - 1.0);
+      }
+    }
+  }      
+  cout << "total_overflow_density: " << total_overflow_density << endl;
   // find bin which has max density
   // time complexity: O(mxm), m is bin numbers
   uint64 max_cell_area_in_bin = 0;
@@ -297,6 +316,7 @@ bool Evaluator::densityCheck() {
   } else {
     return true;
   }
+    
 }
 
 bool Evaluator::fixedPlacedInstanceCheck(Evaluator* compared_circuit) {
@@ -352,3 +372,4 @@ bool Evaluator::fixedPlacedInstanceCheck(Evaluator* compared_circuit) {
 }
 
 }
+
